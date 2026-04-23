@@ -5,16 +5,21 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Executables
-add_executable(receiver.exe src/receiver.cpp src/utils.cpp)
-add_executable(sender.exe src/sender.cpp src/utils.cpp)
+add_executable(receiver src/receiver.cpp src/utils.cpp src/sync.cpp)
+add_executable(sender src/sender.cpp src/utils.cpp src/sync.cpp)
 
-target_include_directories(receiver.exe PRIVATE ${CMAKE_SOURCE_DIR}/include)
-target_include_directories(sender.exe PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(receiver PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(sender PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# Threads for mutex/cond
+find_package(Threads REQUIRED)
+target_link_libraries(receiver PRIVATE Threads::Threads)
+target_link_libraries(sender PRIVATE Threads::Threads)
 
 # Windows support
 if (MINGW)
-    set_target_properties(receiver.exe PROPERTIES SUFFIX "")
-    set_target_properties(sender.exe PROPERTIES SUFFIX "")
+    set_target_properties(receiver PROPERTIES SUFFIX "")
+    set_target_properties(sender PROPERTIES SUFFIX "")
 endif()
 
 # Google Test
@@ -35,12 +40,15 @@ add_executable(test_runner
     tests/test_runner.cpp
     tests/test_receiver.cpp
     tests/test_sender.cpp
+    tests/test_ring_buffer.cpp
     src/utils.cpp
+    src/sync.cpp
 )
 
 target_link_libraries(test_runner
     gtest_main
     gmock
+    pthread
 )
 
 target_include_directories(test_runner PRIVATE
